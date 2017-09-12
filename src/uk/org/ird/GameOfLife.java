@@ -1,23 +1,29 @@
 package uk.org.ird;
 
 class GameOfLife {
-    public static String turn(String board) {
+    public static String turn(String board, int size) {
+        /* smallest valid board is 3x3 (length=9) */
         String res = "";
-        String rows[] = board.split("\n");
         String plainboard = String.join("", board.split("\n"));
-        int n = rows.length;
-        System.out.println("Size: " + n);
-        int i = 0;
-        for(int x=0; x<n; ++x) {
-            for(int y=0; y<n; ++y) {
-                if(plainboard.charAt(i) == '#') {
-                    // populated
-                    System.out.println(i + " is populated. It has "+GameOfLife.countNeighbours(plainboard, n, i) + " friends");
-                } else if (plainboard.charAt(i) == ' ') {
-                    // not
-                    System.out.println(i + " is empty. It has "+GameOfLife.countNeighbours(plainboard, n, i) + " friends");
+        for(int i=0; i<plainboard.length(); ++i) {
+            if(i > 0 && i % size == 0){
+                res += "\n";
+            }
+            int count = countNeighbours(plainboard, size, i);
+            if(plainboard.charAt(i) == '#') {
+                // populated
+                if((count == 2) || (count == 3)){
+                    res += '#';
+                } else {
+                    res += ' ';
                 }
-                ++i;
+            } else if (plainboard.charAt(i) == ' ') {
+                // not
+                if(count == 3){
+                    res += '#';
+                } else {
+                    res += ' ';
+                }
             }
         }
         return res;
@@ -25,15 +31,32 @@ class GameOfLife {
 
     public static int countNeighbours(String plainboard, int size, int i) {
         int count = 0;
-        //TODO: Rework - this won't work!
-        int positions[] = {size+1, size, size-1, 1, -1, (-1-size), -size, 1-size};
+        int positions[] = {i-size-1, i-size, i-size+1, i-1, i+1, i+size-1, i+size, i+size+1};
         for(int j=0; j<positions.length; ++j) {
-            if((i-positions[j] >= 0) && (i-positions[j] < size*size)) {
-                if(plainboard.charAt(i-positions[j]) == '#'){
+            if(GameOfLife.validNeighbour(size, i, positions[j])) {
+                if(plainboard.charAt(positions[j]) == '#'){
                     count += 1;
                 }
             }
         }
         return count;
+    }
+
+    private static boolean validNeighbour(int size, int i, int n) {
+        // return true if n is adjacent to i on a board of size x size (size >= 3)
+        if(n < 0 || n >= size*size) {
+            return false; // out of bounds
+        }
+        if(Math.abs(n-i) == 1) { // n and i are meant to be on the same row
+            if(i/size == n/size){
+                return true;
+            }
+        } else { // n and i are meant to be on different rows (when size >= 3)
+            if(Math.abs(i/size - n/size) == 1){
+                return true;
+            }
+        }
+        return false;
+
     }
 }
